@@ -11,38 +11,6 @@ library(forecast)
 tuesdata <- tidytuesdayR::tt_load('2020-07-21')
 tuesdata <- tidytuesdayR::tt_load(2020, week = 30)
 
-animal_outcomes <- tuesdata$animal_outcomes
-
-#get suburb data
-url <- "https://www.microburbs.com.au/heat-map/population-density#151.170674:-33.840703:13"
-populations <- url %>%
-  read_html() %>%
-  html_table()
-populations <- populations[[1]]
-
-
-
-ani_out <- animal_outcomes %>% pivot_longer(4:12, names_to="state") %>% filter(state != "Total") 
-
-ggplot(ani_out, aes(year, value, col=animal_type)) +
-  geom_point() + facet_wrap(~outcome)
-
-tuesdata$brisbane_complaints %>% 
-  filter(animal_type=="Dog", date_range %in% c("jan-mar-2019.csv","apr-jun-2019.csv","jul-to-sep-2019.csv","cars-srsa-open-data-animal-related-complaints-oct-to-dec-2019.csv" )) %>%
-  group_by(animal_type, category, suburb) %>%
-  tally() %>% filter(!is.na(category)) %>%
-  ggplot(aes(reorder(category, n), n, col=animal_type)) + geom_point() + coord_flip() +
-  facet_wrap(~animal_type, scales="free")
-
-ani_complaint <- tuesdata$animal_complaints %>% 
-  mutate(year=parse_number(`Date Received`)) %>%
-  group_by(year, `Animal Type`, `Complaint Type`, Suburb) %>% tally()
-
-ani_complaint_d <- tuesdata$animal_complaints %>%
-  mutate(date=dmy(paste("01 ",`Date Received`, sep=""))) %>%
-  group_by(date, `Animal Type`, `Complaint Type`, Suburb) %>% tally() %>%
-  pivot_wider(names_from=`Animal Type`, values_from = n) 
-
 ani_complaint_date <- tuesdata$animal_complaints %>%
   mutate(year = parse_number(`Date Received`), month=str_extract(`Date Received`, "[A-Za-z]+" )) %>%
   mutate(month = factor(month, levels = c("January", "February", "March", "April", "May", "June",
@@ -63,10 +31,6 @@ predict_2020 <- forecast_ani %>% group_by(`Animal Type`, `Complaint Type`) %>%
   select(year, month, `Animal Type`, `Complaint Type`, n = predict_incident) %>%
   filter(month %in% c("July", "August", "September", "October", "November", "December")) %>%
   mutate(year=2020, predicted=1)
-
-ggplot(ani_complaint %>% filter(n<300), aes(year, n, col=year)) + 
-  geom_line() + facet_grid(`Animal Type`~`Complaint Type`) +
-  theme_few() + scale_fill_nejm()
 
 ani_complaint_date[ani_complaint_date$year == 2020,] <- predict_2020$predict_incident
 
@@ -89,15 +53,6 @@ ggplot(ani_complaint_date %>% filter(year !=2020), aes(month, n, col=as.factor(y
         plot.title = element_text(family="Futura Medium", size = 30),
         legend.position = "none") +
   labs(x="", y="", title = "Complaining cats and dogs", 
-         subtitle="Dog and cat complaints in Brisbane - 2020 compared to previous years",
-       caption="Source: RSPCA")
-  
-
-ani_ts <- ts(ani_complaint_d[,"n"], frequency=12, start=c(2013,10))
-autoplot(ani_ts)
-
-ggseasonplot(ani_ts %>% select(date,))
-
-
-
-
+         subtitle="Dog and cat complaints in Townsville, Queensland - 2020 compared to previous years and rest of year forecast",
+       caption="Source: Townsville City Council. Visualiation: @lauriejhopkins")
+ggsave("rspca.png", dpi="retina", width=12, height=7)  

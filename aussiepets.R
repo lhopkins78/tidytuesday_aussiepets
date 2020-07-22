@@ -55,4 +55,4 @@ ggplot(ani_complaint_date %>% filter(year !=2020), aes(month, n, col=as.factor(y
   labs(x="", y="", title = "Complaining cats and dogs", 
          subtitle="Dog and cat complaints in Townsville, Queensland - 2020 compared to previous years and rest of year forecast",
        caption="Source: Townsville City Council. Visualiation: @lauriejhopkins")
-ggsave("rspca.png", dpi="retina", width=12, height=7)  
+ggsave("townsville.png", dpi="retina", width=12, height=7)  

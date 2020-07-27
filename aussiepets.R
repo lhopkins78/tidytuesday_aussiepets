@@ -32,7 +32,6 @@ predict_2020 <- forecast_ani %>% group_by(`Animal Type`, `Complaint Type`) %>%
   filter(month %in% c("July", "August", "September", "October", "November", "December")) %>%
   mutate(year=2020, predicted=1)
 
-ani_complaint_date[ani_complaint_date$year == 2020,] <- predict_2020$predict_incident
 
 ggplot(ani_complaint_date %>% filter(year !=2020), aes(month, n, col=as.factor(year),
                                                  group=as.factor(year))) + 
